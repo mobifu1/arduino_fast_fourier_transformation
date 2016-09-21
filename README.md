@@ -1,2 +1,3 @@
-# arduino_fft
-Frequency Spectrum of Sound
+#Fast Fourier Transformation
+
+256 Points FFT > Frequency Spectrum of Sound
