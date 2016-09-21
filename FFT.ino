@@ -8,6 +8,8 @@
 //##################################################################################################################
 #include <avr/pgmspace.h>
 #include <TimerOne.h>
+#include <Adafruit_SSD1306.h> //128x64 Oled Display
+
 
 #define microseconds_1 200  //Timer1 in mikro seconds  default =100 =8,32 khz / 200=4.995 khz
 //-----------------------------------------------------------------------------------------
@@ -231,7 +233,9 @@ void setup() {
 
   Serial.begin(9600);
   check();
-  load_sinus();
+  //load_sinus();
+  //load_rectangle();
+  load_triangle();
   //load_zero();
   fft();
   koeffizienten();
@@ -287,6 +291,40 @@ void load_zero() {                                              //Test-Zero line
   }
   Serial.println("Zero Line loaded");
 
+}
+//-----------------------------------------------------------------------------------------
+void load_rectangle() {                                              //Test-Rectangle line
+
+  for (int i = 0 ; i < 128; i++) {
+    A[i] = 50;
+    //Serial.println(String(A[i]));
+  }
+  for (int i = 128 ; i < 256; i++) {
+    A[i] = -50;
+    //Serial.println(String(A[i]));
+  }
+  Serial.println("Rectangle loaded");
+}
+//---------------------------------------------------------------------------------------- -
+void load_triangle() {                                              //Test-Rectangle line
+
+  for (int i = 0 ; i < 64; i++) {
+    A[i] = i;
+    //Serial.println(String(A[i]));
+  }
+  for (int i = 64 ; i < 128; i++) {
+    A[i] = 128 - i;
+    //Serial.println(String(A[i]));
+  }
+  for (int i = 128 ; i < 192; i++) {
+    A[i] = (128 - i);
+    //Serial.println(String(A[i]));
+  }
+  for (int i = 192 ; i < 256; i++) {
+    A[i] = i - 256;
+    //Serial.println(String(A[i]));
+  }
+  Serial.println("Triangle loaded");
 }
 //-----------------------------------------------------------------------------------------
 void division_zw1_256() {
