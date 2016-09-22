@@ -8,8 +8,13 @@
 //##################################################################################################################
 #include <avr/pgmspace.h>
 #include <TimerOne.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h> //128x64 Oled Display
 
+#define OLED_RESET 4
+Adafruit_SSD1306 display(OLED_RESET);
 
 #define microseconds_1 200  //Timer1 in mikro seconds  default =100 =8,32 khz / 200=4.995 khz
 //-----------------------------------------------------------------------------------------
@@ -231,15 +236,22 @@ void setup() {
   pinMode(controll_pin, OUTPUT);
   pinMode(analog_pin, INPUT);
 
+  // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3D);  // initialize with the I2C addr 0x3D (for the 128x64)
+  display.display();
+  display.invertDisplay(true);
+  display.clearDisplay();
+
   Serial.begin(9600);
+
   check();
   //load_sinus();
   //load_rectangle();
-  load_triangle();
+  //load_triangle();
   //load_zero();
-  fft();
-  koeffizienten();
-  output_terminal();
+  //fft();
+  //koeffizienten();
+  //output_terminal();
 
   Timer1.initialize(microseconds_1);
   Timer1.attachInterrupt(timer1_subroutine);
@@ -249,7 +261,7 @@ void loop() {
 
   fft();
   koeffizienten();
-  output_led();
+  output_oled();
   if (led_status == true) {
     led_status = false;
     digitalWrite(led, HIGH); //  Toggle led
@@ -270,7 +282,6 @@ void check() {                                                 //EEprom check
   Serial.print(String(zw1));
   if (zw1 == 32640) Serial.println(" > EEprom Check OK");
   if (zw1 != 32640) Serial.println(" > EEprom Check Failed");
-
 }
 //-----------------------------------------------------------------------------------------
 void load_sinus() {                                              //Test-Sinus
@@ -290,10 +301,9 @@ void load_zero() {                                              //Test-Zero line
     //Serial.println(String(A[i]));
   }
   Serial.println("Zero Line loaded");
-
 }
 //-----------------------------------------------------------------------------------------
-void load_rectangle() {                                              //Test-Rectangle line
+void load_rectangle() {                                         //Test-Rectangle line
 
   for (int i = 0 ; i < 128; i++) {
     A[i] = 50;
@@ -306,7 +316,7 @@ void load_rectangle() {                                              //Test-Rect
   Serial.println("Rectangle loaded");
 }
 //---------------------------------------------------------------------------------------- -
-void load_triangle() {                                              //Test-Rectangle line
+void load_triangle() {                                          //Test-Rectangle line
 
   for (int i = 0 ; i < 64; i++) {
     A[i] = i;
@@ -433,11 +443,11 @@ void transformation() {
   for (int u = 0; u < 128; u++) {
 
     x = pgm_read_byte_near(dft + z);
-    z++;                                                    //next EEpromaddress
+    z++;                                                     //next EEpromaddress
     y = pgm_read_byte_near(dft + z);
-    z++;                                                    //next EEpromaddress
+    z++;                                                     //next EEpromaddress
 
-    w = pgm_read_byte_near(dft + v);                                              //1.Wn Factor is ever Wn^0 and located at address Re[0] und Im[0]
+    w = pgm_read_byte_near(dft + v);                         //1.Wn Factor is ever Wn^0 and located at address Re[0] und Im[0]
     zw1 = Ak[y] * pgm_read_word_near(re_wn + w);
     division_zw1_256();                                      //zw1=zw1/256
     zw2 = Bk[y] * pgm_read_word_near(im_wn + w);
@@ -500,10 +510,17 @@ void output_terminal() {
   }
 }
 //-----------------------------------------------------------------------------------------
-void output_led() {
+void output_oled() {
 
+  byte val;
+  //display.clearDisplay();
   for (int i = 0 ; i < 128; i++) {
-    //do something with led
+    val =  P[i];
+    if ( val > 63) val = 63;
+    display.drawLine(i, 0, i, 63 , BLACK);// x-width,x-hight,y-width,y-hight,color
+    display.drawLine(i, 0, i, P[i] , WHITE);// x-width,x-hight,y-width,y-hight,color
+    //display.drawPixel(i,  P[i], WHITE);//x,y
+    display.display();
   }
 }
 //-----------------------------------------------------------------------------------------
@@ -514,5 +531,4 @@ void timer1_subroutine(void) {
   A[counter] = analogRead(analog_pin) - 512;  // read the input pin - 512
   counter++;
   if (counter > 255) counter = 0;
-
 }
