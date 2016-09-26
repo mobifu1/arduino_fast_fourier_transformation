@@ -8,13 +8,28 @@
 //##################################################################################################################
 #include <avr/pgmspace.h>
 #include <TimerOne.h>
-#include <SPI.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h> //128x64 Oled Display
+#include <UTFT.h>
 
-#define OLED_RESET 4
-Adafruit_SSD1306 display(OLED_RESET);
+// Declare Colors
+#define BLACK   0x0000
+#define BLUE    0x001F
+#define RED     0xF800
+#define GREEN   0x07E0
+#define CYAN    0x07FF
+#define MAGENTA 0xF81F
+#define YELLOW  0xFFE0
+#define WHITE   0xFFFF
+#define ORANGE  0xFBE0
+#define GRAY    0x7BEF
+
+// Set the pins to the correct ones for your development shield
+// ------------------------------------------------------------
+// Arduino Mega:
+// Standard Arduino Mega/Due shield            : <display model>,38,39,40,41
+// CTE TFT LCD/SD Shield for Arduino Mega      : <display model>,38,39,40,41
+//
+// Remember to change the model parameter to suit your display module!
+UTFT tft(SSD1289, 38, 39, 40, 41);
 
 #define microseconds_1 200  //Timer1 in mikro seconds  default =100 =8,32 khz / 200=4.995 khz
 //-----------------------------------------------------------------------------------------
@@ -236,11 +251,10 @@ void setup() {
   pinMode(controll_pin, OUTPUT);
   pinMode(analog_pin, INPUT);
 
-  // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3D);  // initialize with the I2C addr 0x3D (for the 128x64)
-  display.display();
-  display.invertDisplay(true);
-  display.clearDisplay();
+  // Setup the LCD
+  tft.InitLCD();//(oriantation:90)
+  tft.clrScr();
+  tft.setBackColor(BLACK);
 
   Serial.begin(9600);
 
@@ -249,9 +263,10 @@ void setup() {
   //load_rectangle();
   //load_triangle();
   //load_zero();
-  //fft();
-  //koeffizienten();
-  //output_terminal();
+  //  fft();
+  //  koeffizienten();
+  //  output_display();
+  // output_terminal();
 
   Timer1.initialize(microseconds_1);
   Timer1.attachInterrupt(timer1_subroutine);
@@ -261,7 +276,7 @@ void loop() {
 
   fft();
   koeffizienten();
-  output_oled();
+  output_display();
   if (led_status == true) {
     led_status = false;
     digitalWrite(led, HIGH); //  Toggle led
@@ -510,17 +525,16 @@ void output_terminal() {
   }
 }
 //-----------------------------------------------------------------------------------------
-void output_oled() {
+void output_display() {
 
   byte val;
-  //display.clearDisplay();
   for (int i = 0 ; i < 128; i++) {
     val =  P[i];
-    if ( val > 63) val = 63;
-    display.drawLine(i, 0, i, 63 , BLACK);// x-width,x-hight,y-width,y-hight,color
-    display.drawLine(i, 0, i, P[i] , WHITE);// x-width,x-hight,y-width,y-hight,color
-    //display.drawPixel(i,  P[i], WHITE);//x,y
-    display.display();
+    if ( val > 128) val = 128;
+    tft.setColor(BLACK);
+    tft.drawLine(i, 0, i, 128);
+    tft.setColor(WHITE);
+    tft.drawLine(i, 0, i, val);
   }
 }
 //-----------------------------------------------------------------------------------------
